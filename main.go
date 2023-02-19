@@ -7,21 +7,10 @@ import (
 )
 
 func main() {
-	l, err := gpiod.RequestLine("gpiochip0", rpi.GPIO2)
-	if err != nil {
-		panic(err)
-	}
-	err = l.SetValue(0)
-	if err != nil {
-		panic(err)
-	}
+	c, _ := gpiod.NewChip("gpiochip0", gpiod.WithConsumer("myapp"))
+	l, _ := c.RequestLine(rpi.GPIO2)
+	_ = l.SetValue(0)
 	time.Sleep(100 * time.Millisecond)
-	err = l.SetValue(1)
-	if err != nil {
-		panic(err)
-	}
-	err = l.Close()
-	if err != nil {
-		panic(err)
-	}
+	_ = l.SetValue(1)
+	_ = l.Close()
 }
