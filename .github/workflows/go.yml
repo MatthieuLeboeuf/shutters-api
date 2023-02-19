@@ -8,19 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: arm64-ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Generate build files
-      uses: thatisuday/go-cross-build@v1
+    - name: Set up Go
+      uses: actions/setup-go@v3
       with:
-          platforms: 'linux/arm64'
-          package: ''
-          compress: 'false'
-          name: 'shutters-api'
-          dest: 'build'
+        go-version: 1.20
+    - name: Build
+      run: go build -v -o shutters-api
     - name: Upload file
       uses: actions/upload-artifact@v3
       with:
         name: shutters-api
-        path: build/shutters-api-linux-arm64
+        path: shutters-api
