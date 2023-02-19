@@ -1,39 +1,56 @@
 package main
 
 import (
+	"fmt"
 	"github.com/warthog618/gpiod"
 	"github.com/warthog618/gpiod/device/rpi"
 	"log"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
-func up(w http.ResponseWriter, r *http.Request) {
-	l, _ := gpiod.RequestLine("gpiochip0", rpi.GPIO3, gpiod.AsOutput(1))
-	_ = l.SetValue(0)
-	time.Sleep(100 * time.Millisecond)
-	_ = l.SetValue(1)
-	_ = l.Close()
-	w.WriteHeader(http.StatusOK)
-}
+var percentage int
 
-func down(w http.ResponseWriter, r *http.Request) {
-	l, _ := gpiod.RequestLine("gpiochip0", rpi.GPIO2, gpiod.AsOutput(1))
+func set(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	p, _ := strconv.Atoi(r.Form.Get("p"))
+	if percentage == p {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	gpio := rpi.GPIO3 // up
+	if p > percentage {
+		gpio = rpi.GPIO2 // down
+	}
+	l, _ := gpiod.RequestLine("gpiochip0", gpio, gpiod.AsOutput(1))
+	// Press button
 	_ = l.SetValue(0)
 	time.Sleep(100 * time.Millisecond)
 	_ = l.SetValue(1)
+	if p != 0 && p != 100 {
+		time.Sleep(time.Duration(17.0/100.0*math.Abs(float64(p-percentage))) * time.Second)
+		// Press button
+		_ = l.SetValue(0)
+		time.Sleep(100 * time.Millisecond)
+		_ = l.SetValue(1)
+	}
 	_ = l.Close()
+	percentage = p
 	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
+	percentage = 0
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("/open", up)
-	mux.HandleFunc("/close", down)
+	mux.HandleFunc("/", set)
 
-	err := http.ListenAndServe(":8080", mux)
+	port := "8080"
+	fmt.Println("Webserver started on 0.0.0.0:" + port)
+	err := http.ListenAndServe(":"+port, mux)
 	if err != nil {
 		log.Fatal(err)
 	}
