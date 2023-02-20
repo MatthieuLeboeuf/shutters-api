@@ -16,6 +16,7 @@ type Shutter struct {
 
 var conf = struct {
 	AppToken string    `json:"app_token"`
+	AppPort  string    `json:"app_port"`
 	Shutters []Shutter `json:"shutters"`
 }{}
 
@@ -75,9 +76,8 @@ func main() {
 	// Register routes
 	mux.HandleFunc("/", set)
 
-	port := "8080"
-	println("Webserver started on 0.0.0.0:" + port)
-	err = http.ListenAndServe(":"+port, mux)
+	println("Webserver started on 0.0.0.0:" + conf.AppPort)
+	err = http.ListenAndServe(":"+conf.AppPort, mux)
 	if err != nil {
 		panic(err)
 	}
