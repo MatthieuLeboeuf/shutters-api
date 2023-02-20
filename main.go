@@ -3,36 +3,21 @@ package main
 import (
 	"encoding/json"
 	"github.com/warthog618/gpiod"
-	"io"
-	"math"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
 type Shutter struct {
-	Name  string `json:"name"`
-	Up    int    `json:"up"`
-	Down  int    `json:"down"`
-	Total int    `json:"total"`
+	Name string `json:"name"`
+	Up   int    `json:"up"`
+	Down int    `json:"down"`
 }
 
-type Config struct {
-	Api struct {
-		Url   string `json:"url"`
-		Token string `json:"token"`
-	} `json:"api"`
+var conf = struct {
+	AppToken string    `json:"app_token"`
 	Shutters []Shutter `json:"shutters"`
-}
-
-type apiEntity struct {
-	Attributes struct {
-		Percentage int `json:"current_position"`
-	} `json:"attributes"`
-}
-
-var conf = Config{}
+}{}
 
 func getShutter(name string) Shutter {
 	var shutter Shutter
@@ -42,25 +27,6 @@ func getShutter(name string) Shutter {
 		}
 	}
 	return shutter
-}
-
-func getPercentage(shutter Shutter) int {
-	req, _ := http.NewRequest(
-		"GET",
-		conf.Api.Url+"/states/cover.shutter_"+shutter.Name,
-		nil,
-	)
-	req.Header.Set("Authorization", "Bearer "+conf.Api.Token)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, _ := client.Do(req)
-	entity := apiEntity{}
-	body, _ := io.ReadAll(resp.Body)
-	_ = json.Unmarshal(body, &entity)
-	defer resp.Body.Close()
-
-	return entity.Attributes.Percentage
 }
 
 func pressButton(gpio int) {
@@ -73,37 +39,33 @@ func pressButton(gpio int) {
 }
 
 func set(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Bearer "+conf.AppToken {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	// get variables
 	_ = r.ParseForm()
 	s := r.Form.Get("s")
-	p, _ := strconv.Atoi(r.Form.Get("p"))
+	p := r.Form.Get("p")
 
 	shutter := getShutter(s)
 
-	// fetch current percentage from api
-	actual := getPercentage(shutter)
-
 	// determinate the right button
 	gpio := shutter.Down
-	if p > actual {
+	if p == "up" {
 		gpio = shutter.Up
 	}
 
 	// start shutter
 	pressButton(gpio)
 
-	// wait for the action
-	if p != 0 && p != 100 {
-		time.Sleep(time.Duration(float64(shutter.Total)/100.0*math.Abs(float64(p-actual))) * time.Second)
-		pressButton(gpio)
-	}
-
 	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
-	configFile, _ := os.ReadFile("./config.json")
-	err := json.Unmarshal(configFile, &conf)
+	file, _ := os.ReadFile("./config.json")
+	err := json.Unmarshal(file, &conf)
 	if err != nil {
 		panic(err)
 	}

@@ -1,7 +1,4 @@
 {
-  "api": {
-    "url": "",
-    "token": ""
-  },
+  "app_token": "",
   "shutters": []
 }
