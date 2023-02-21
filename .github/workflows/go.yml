@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
   pull_request:
@@ -16,7 +17,7 @@ jobs:
       with:
         go-version: 'stable'
     - name: Build
-      run: go build -v -o shutters-api
+      run: CGO_ENABLED=0 go build -v -o shutters-api
     - name: Upload file
       uses: actions/upload-artifact@v3
       with:
