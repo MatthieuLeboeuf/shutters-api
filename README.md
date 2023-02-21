@@ -8,6 +8,27 @@
 
 Les télécommandes ayant un fil commun entre les deux boutons je connecte uniquement 3 fils.
 
+### Configuration de l'api
+
+Tout d'abord vous pouvez récupérer le fichier build dans les actions github
+
+Ensuite il faut créer un fichier `config.json` en se basant sur `config.example.json`.
+
+app_token contient le token d'authentification, app_port le port du serveur web et shutters contient un tableau de tout
+les volets de cette forme :
+
+```
+  "shutters": [
+    {
+      "name": "example",
+      "up": 1,
+      "down": 0
+    }
+  ]
+```
+
+le numéro de up et down correspond au numéro du [GPIO](https://pinout.xyz/) et le nom servira pour home assistant
+
 ### Intégration dans home assistant
 
 Tout d'abord il faut créer une "commande" qui permettera de contacter l'api
