@@ -34,7 +34,7 @@ func pressButton(gpio int) {
 	l, _ := gpiod.RequestLine("gpiochip0", gpio, gpiod.AsOutput(1))
 	// Press button
 	_ = l.SetValue(0)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	_ = l.SetValue(1)
 	_ = l.Close()
 }
