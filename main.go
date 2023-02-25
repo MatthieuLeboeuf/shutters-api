@@ -20,6 +20,8 @@ var conf = struct {
 	Shutters []Shutter `json:"shutters"`
 }{}
 
+var shuttersQueue []int
+
 func getShutter(name string) Shutter {
 	var shutter Shutter
 	for i := 0; i < len(conf.Shutters); i++ {
@@ -58,10 +60,22 @@ func set(w http.ResponseWriter, r *http.Request) {
 		gpio = shutter.Up
 	}
 
-	// start shutter
-	pressButton(gpio)
+	// add shutter action to queue
+	shuttersQueue = append(shuttersQueue, gpio)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func processQueue() {
+	for true {
+		var tempQueue = shuttersQueue
+		for i := 0; i < len(tempQueue); i++ {
+			pressButton(tempQueue[i])
+			time.Sleep(500 * time.Millisecond)
+			shuttersQueue = append(shuttersQueue[:i], shuttersQueue[i+1:]...)
+		}
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func main() {
@@ -70,6 +84,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// start process queue
+	go processQueue()
 
 	mux := http.NewServeMux()
 
