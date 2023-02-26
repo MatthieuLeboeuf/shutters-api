@@ -68,13 +68,12 @@ func set(w http.ResponseWriter, r *http.Request) {
 
 func processQueue() {
 	for true {
-		var tempQueue = shuttersQueue
-		for i := 0; i < len(tempQueue); i++ {
-			pressButton(tempQueue[i])
+		for i := 0; i < len(shuttersQueue); i++ {
+			pressButton(shuttersQueue[i])
 			time.Sleep(500 * time.Millisecond)
 		}
 		shuttersQueue = []int{}
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
