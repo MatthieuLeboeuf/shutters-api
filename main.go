@@ -33,7 +33,7 @@ func getShutter(name string) Shutter {
 }
 
 func pressButton(gpio int) {
-	l, _ := gpiod.RequestLine("gpiochip0", gpio, gpiod.AsOutput(1))
+	l, _ := gpiod.RequestLine("gpiochip0", gpio)
 	// Press button
 	_ = l.SetValue(0)
 	time.Sleep(500 * time.Millisecond)
@@ -73,7 +73,7 @@ func processQueue() {
 			time.Sleep(500 * time.Millisecond)
 		}
 		shuttersQueue = []int{}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
