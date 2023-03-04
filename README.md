@@ -22,12 +22,14 @@ les volets de cette forme :
     {
       "name": "example",
       "up": 1,
-      "down": 0
+      "down": 0,
+      "trigger": "low"
     }
   ]
 ```
 
-le numéro de up et down correspond au numéro du [GPIO](https://pinout.xyz/) et le nom servira pour home assistant
+le numéro de up et down correspond au numéro du [GPIO](https://pinout.xyz/), le nom servira pour home assistant et 
+trigger contient soit low ou high ce qui permet de presser le bouton avec tout les relais.
 
 ### Intégration dans home assistant
 

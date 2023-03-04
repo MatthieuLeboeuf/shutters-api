@@ -9,9 +9,15 @@ import (
 )
 
 type Shutter struct {
-	Name string `json:"name"`
-	Up   int    `json:"up"`
-	Down int    `json:"down"`
+	Name    string `json:"name"`
+	Up      int    `json:"up"`
+	Down    int    `json:"down"`
+	Trigger string `json:"trigger"`
+}
+
+type processShutter struct {
+	gpio    int
+	trigger string
 }
 
 var conf = struct {
@@ -20,7 +26,7 @@ var conf = struct {
 	Shutters []Shutter `json:"shutters"`
 }{}
 
-var shuttersQueue []int
+var shuttersQueue []processShutter
 
 func getShutter(name string) Shutter {
 	var shutter Shutter
@@ -32,12 +38,21 @@ func getShutter(name string) Shutter {
 	return shutter
 }
 
-func pressButton(gpio int) {
-	l, _ := gpiod.RequestLine("gpiochip0", gpio, gpiod.AsOutput(1))
+func pressButton(shutter processShutter) {
+	var idleValue int
+	var pressValue int
+	if shutter.trigger == "low" {
+		pressValue = 0
+		idleValue = 1
+	} else {
+		pressValue = 1
+		idleValue = 0
+	}
+	l, _ := gpiod.RequestLine("gpiochip0", shutter.gpio, gpiod.AsOutput(idleValue))
 	// Press button
-	_ = l.SetValue(0)
+	_ = l.SetValue(pressValue)
 	time.Sleep(500 * time.Millisecond)
-	_ = l.SetValue(1)
+	_ = l.SetValue(idleValue)
 	_ = l.Close()
 }
 
@@ -60,8 +75,10 @@ func set(w http.ResponseWriter, r *http.Request) {
 		gpio = shutter.Up
 	}
 
+	ps := processShutter{gpio: gpio, trigger: shutter.Trigger}
+
 	// add shutter action to queue
-	shuttersQueue = append(shuttersQueue, gpio)
+	shuttersQueue = append(shuttersQueue, ps)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -72,8 +89,8 @@ func processQueue() {
 			pressButton(shuttersQueue[i])
 			time.Sleep(500 * time.Millisecond)
 		}
-		shuttersQueue = []int{}
-		time.Sleep(500 * time.Millisecond)
+		shuttersQueue = []processShutter{}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
