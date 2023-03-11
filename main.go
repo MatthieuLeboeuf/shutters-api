@@ -73,7 +73,7 @@ func processQueue() {
 			time.Sleep(500 * time.Millisecond)
 		}
 		shuttersQueue = []int{}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
