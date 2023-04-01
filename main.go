@@ -70,7 +70,7 @@ func processQueue() {
 	for true {
 		for i := 0; i < len(shuttersQueue); i++ {
 			pressButton(shuttersQueue[i])
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(1 * time.Second)
 		}
 		shuttersQueue = []int{}
 		time.Sleep(10 * time.Millisecond)
